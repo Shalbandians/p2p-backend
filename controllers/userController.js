@@ -107,7 +107,7 @@ exports.userOtpSend = async (req, res) => {
 
     }
 }
-exports.userLogin = async (req, res) => {
+/* exports.userLogin = async (req, res) => {
     const { otp, email } = req.body;
     if (!otp || !email) {
         res.status(400).json({ error: "Please Enter Your Email and Otp" })
@@ -128,4 +128,36 @@ exports.userLogin = async (req, res) => {
 
     }
 
+} */
+
+exports.userLogin = async (req, res) => {
+    const { otp, email } = req.body;
+    if (!otp || !email) {
+        res.status(400).json({ error: "Please Enter Your Email and Otp" });
+        return; // Add a return statement to prevent further execution
+    }
+
+    try {
+        const otpVerification = await userotp.findOne({ email: email });
+        if (!otpVerification) {
+            res.status(400).json({ error: "User with this email not found" });
+            return;
+        }
+
+        if (otpVerification.otp === otp) {
+            const preuser = await user.findOne({ email: email });
+            if (!preuser) {
+                res.status(400).json({ error: "User not found" });
+                return;
+            }
+
+            const token = await preuser.generateAuthtoken();
+            res.status(200).json({ message: "User login successful", userToken: token });
+        } else {
+            res.status(400).json({ error: "Invalid OTP" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
 }
+

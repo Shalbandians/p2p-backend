@@ -43,7 +43,7 @@ userSchema.pre("save", async function (next) {
     next();
 });
 
-userSchema.methods.generateAuthtoken = async function () {
+/* userSchema.methods.generateAuthtoken = async function () {
     try {
         let newtoken = jwt.sign({ _id: this._id }, SECRECT_KEY, {
             expiresIn: "1d"
@@ -56,7 +56,20 @@ userSchema.methods.generateAuthtoken = async function () {
         res.status(400).json(error)
 
     }
+}; */
+userSchema.methods.generateAuthtoken = async function () {
+    try {
+        const newtoken = jwt.sign({ _id: this._id }, SECRECT_KEY, {
+            expiresIn: "1d"
+        });
+        this.token = this.token.concat({ token: newtoken });
+        await this.save();
+        return newtoken;
+    } catch (error) {
+        throw new Error(error); // Remove the res.status(400).json(error) line
+    }
 };
+
 
 
 const user = mongoose.model("Users", userSchema);
