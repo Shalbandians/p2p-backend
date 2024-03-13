@@ -49,7 +49,8 @@ exports.userOtpSend = async (req, res) => {
     try {
         const preuser = await user.findOne({ email: email });
         if (preuser) {
-            const OTP = Math.floor(100000 * Math.random() * 900000);
+        /*     const OTP = Math.floor(100000 * Math.random() * 900000) */;
+            const OTP = Math.floor(100000 + Math.random() * 900000);
             const existEmail = await userotp.findOne({ email: email })
             if (existEmail) {
                 const updateData = await userotp.findByIdAndUpdate({ _id: existEmail._id }, {
