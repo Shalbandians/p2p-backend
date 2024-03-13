@@ -12,9 +12,44 @@ const transportor = nodemailer.createTransport({
     }
 })
 
-
-
 exports.userregister = async (req, res) => {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: "Please Enter all fields" });
+    }
+    try {
+        const preuser = await user.findOne({ email: email });
+        if (preuser) {
+            return res.status(400).json({ error: 'This Email Already Exists' });
+        } else {
+            const OTP = Math.floor(100000 + Math.random() * 900000);
+            const saveData = new userotp({ email, otp: OTP });
+            await saveData.save();
+
+            const userregister = new user({ name, email, password });
+            const storedData = await userregister.save();
+
+            const mailOption = {
+                from: process.env.EMAIL,
+                to: email,
+                subject: "Otp Verification",
+                text: `OTP : ${OTP}`,
+            };
+            transportor.sendMail(mailOption, (error, info) => {
+                if (error) {
+                    console.log("error", error);
+                    return res.status(400).json({ error: "Email not sent" });
+                } else {
+                    console.log("Email Sent", info);
+                    return res.status(200).json({ message: "User registered successfully. Email sent with OTP." });
+                }
+            });
+        }
+    } catch (error) {
+        res.status(400).json({ error: "Invalid Details", error });
+    }
+}
+/* exports.userregister = async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
         res.status(400).json({ error: "Please Enter all fields" })
@@ -36,7 +71,7 @@ exports.userregister = async (req, res) => {
 
     }
 
-}
+} */
 
 
 
@@ -49,7 +84,6 @@ exports.userOtpSend = async (req, res) => {
     try {
         const preuser = await user.findOne({ email: email });
         if (preuser) {
-        /*     const OTP = Math.floor(100000 * Math.random() * 900000) */;
             const OTP = Math.floor(100000 + Math.random() * 900000);
             const existEmail = await userotp.findOne({ email: email })
             if (existEmail) {
