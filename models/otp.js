@@ -16,7 +16,9 @@ const Userotp = new mongoose.Schema({
     otp: {
         type: String,
         required: true
-    }
+    },
+
+
 })
 
 const userotp = mongoose.model("userotps", Userotp);

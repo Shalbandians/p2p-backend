@@ -98,11 +98,33 @@ exports.userOtpSend = async (req, res) => {
 
         } else {
 
-            res.status(400).json({ error: 'This Email  not Exit' })
+            res.status(400).json({ error: 'InValid Details', error })
 
         }
 
     } catch (error) {
 
     }
+}
+exports.userLogin = async (req, res) => {
+    const { otp, email } = req.body;
+    if (!otp || !email) {
+        res.status(400).json({ error: "Please Enter Your Email and Otp" })
+    }
+
+    try {
+        const otpverfication = await userotp.findOne({ email: email });
+        if (otpverfication.otp === otp) {
+            const preuser = await user.findOne({ email: email });
+            const token = await preuser.generateAuthtoken();
+            res.status(200).json({ message: "User Login Succesfully Done", userToken: token });
+
+        } else {
+            res.status(400).json({ error: "InValid Otp" })
+        }
+    } catch (error) {
+        res.status(400).json({ error: 'InValid Details', error })
+
+    }
+
 }

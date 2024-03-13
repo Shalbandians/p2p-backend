@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const validate = require("validator")
 const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken");
+const SECRECT_KEY = "asdfghjklzxcv@n";
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -21,7 +23,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 8
-    }
+    },
+    token: [
+        {
+            token: {
+                type: String,
+                required: true
+
+            }
+        }
+    ]
 
 });
 
@@ -30,7 +41,22 @@ userSchema.pre("save", async function (next) {
         this.password = await bcrypt.hash(this.password, 12)
     }
     next();
-})
+});
+
+userSchema.methods.generateAuthtoken = async function () {
+    try {
+        let newtoken = jwt.sign({ _id: this._id }, SECRECT_KEY, {
+            expiresIn: "1d"
+        })
+        this.tokens = this.tokens.concat({ token: newtoken });
+        await this.save();
+        return newtoken;
+
+    } catch (error) {
+        res.status(400).json(error)
+
+    }
+};
 
 
 const user = mongoose.model("Users", userSchema);
