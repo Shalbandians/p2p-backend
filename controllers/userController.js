@@ -82,7 +82,7 @@ exports.userOtpSend = async (req, res) => {
                     from: process.env.EMAIL,
                     to: email,
                     subject: "Otp Verification",
-                    text: " OTP : ${OTP}",
+                    text: `OTP : ${OTP}`,
                 }
                 transportor.sendMail(mailOption, (error, info) => {
                     if (error) {
