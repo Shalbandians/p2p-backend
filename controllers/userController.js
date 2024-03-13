@@ -1,7 +1,9 @@
 
 const user = require("../models/userSchema")
+
 const userotp = require("../models/otp")
 const nodemailer = require("nodemailer")
+const bcrypt = require("bcryptjs")
 
 
 const transportor = nodemailer.createTransport({
@@ -164,7 +166,7 @@ exports.userOtpSend = async (req, res) => {
 
 } */
 
-exports.userLogin = async (req, res) => {
+/* exports.userLogin = async (req, res) => {
     const { otp, email } = req.body;
     if (!otp || !email) {
         res.status(400).json({ error: "Please Enter Your Email and Otp" });
@@ -192,6 +194,30 @@ exports.userLogin = async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+} */
+
+
+exports.userLogin = async (req, res) => {
+    try {
+        const { password, email } = req.body;
+        let userData = await user.findOne({ email }); // Use a different variable name to avoid conflict
+        if (!userData) {
+            return res.status(400).json({ error: "User not found. Please ensure you are using the right credentials" });
+        }
+        const isPasswordMatch = bcrypt.compareSync(password, userData.password);
+
+        if (!isPasswordMatch) {
+            return res.status(403).json({ error: "Incorrect password, please try again" });
+        } else {
+
+            const token = await userData.generateAuthtoken();
+            return res.status(200).json({ message: "User login successful", userToken: token });
+        }
+
+
+    } catch (error) {
+        return res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 }
 
