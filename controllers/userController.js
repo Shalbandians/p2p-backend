@@ -80,7 +80,6 @@ exports.userregister = async (req, res) => {
 
 /* exports.userOtpSend = async (req, res) => {
     const { email } = req.body;
-    let verified=true;
     if (!email) {
         res.status(400).json({ error: "Please Enter Your Email" })
     }
@@ -199,45 +198,33 @@ exports.userregister = async (req, res) => {
 } */
 
 exports.userOtpSend = async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-        return res.status(400).json({ error: "Please Enter Your Email" });
+    const { otp, email } = req.body;
+    if (!otp || !email) {
+        res.status(400).json({ error: "Please Enter Your Email and Otp" });
+        return; // Add a return statement to prevent further execution
     }
+
     try {
-        const preuser = await user.findOne({ email });
-        if (!preuser) {
-            return res.status(400).json({ error: "Invalid Email" });
+        const otpVerification = await userotp.findOne({ email: email });
+        if (!otpVerification) {
+            res.status(400).json({ error: "User with this email not found" });
+            return;
         }
-        const OTP = Math.floor(100000 + Math.random() * 900000);
-        const existEmail = await userotp.findOne({ email });
-        if (existEmail) {
-            const updateData = await userotp.findByIdAndUpdate(existEmail._id, { otp: OTP }, { new: true });
-            await updateData.save();
-        } else {
-            const saveData = new userotp({ email, otp: OTP });
-            await saveData.save();
-        }
-        // Update user document status
-        await user.findOneAndUpdate({ email }, { verified: true });
-        // Send email
-        const mailOption = {
-            from: process.env.EMAIL,
-            to: email,
-            subject: "Otp Verification",
-            text: `OTP : ${OTP}`,
-        };
-        transportor.sendMail(mailOption, (error, info) => {
-            if (error) {
-                console.log("error", error);
-                return res.status(400).json({ error: "Email not sent" });
-            } else {
-                console.log("Email Sent", info);
-                return res.status(200).json({ message: "Email sent Successfully" });
+
+        if (otpVerification.otp === otp) {
+            const preuser = await user.findOne({ email: email });
+            if (!preuser) {
+                res.status(400).json({ error: "User not found" });
+                return;
             }
-        });
+
+            const token = await preuser.generateAuthtoken();
+            res.status(200).json({ message: "User login successful", userToken: token });
+        } else {
+            res.status(400).json({ error: "Invalid OTP" });
+        }
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
 
