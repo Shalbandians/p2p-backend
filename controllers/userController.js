@@ -219,7 +219,7 @@ exports.userOtpSend = async (req, res) => {
             }
 
             const token = await preuser.generateAuthtoken();
-            res.status(200).json({ message: "User login successful", userToken: token });
+            res.status(200).json({ message: "OTP verified successfully!.", userToken: token });
         } else {
             res.status(400).json({ error: "Invalid OTP" });
         }
