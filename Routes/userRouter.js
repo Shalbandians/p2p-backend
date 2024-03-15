@@ -8,6 +8,7 @@ router.post("/user/login", controllers.userLogin)
 router.post("/user/OtpResend", controllers.userOtpResend)
 
 
+router.post("/user/ResetPassword", controllers.userResetPassword)
 
 
 
