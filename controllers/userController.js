@@ -242,7 +242,7 @@ exports.userLogin = async (req, res) => {
         } else {
 
             const token = await userData.generateAuthtoken();
-            return res.status(200).json({ message: "User login successful", userToken: token });
+            return res.status(200).json({ message: "User login successful", userToken: token, userId: userData._id });
         }
 
 
@@ -401,3 +401,141 @@ exports.userResetPassword = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
+/* exports.updateProfile = async (req, res) => {
+    const { firstName, lastName, email, address, userId } = req.body;
+
+    try {
+        // Find the user by ID
+        const preuser = await user.findOne({ _id: userId });
+
+        // Check if user exists
+        if (!preuser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if the new email already exists
+        const existingUser = await user.findOne({ email });
+        if (existingUser && existingUser._id.toString() !== userId) {
+            return res.status(400).json({ error: "Email address already in use" });
+        }
+
+        // Update user information
+        preuser.firstName = firstName;
+        preuser.lastName = lastName;
+        preuser.address = address;
+        preuser.email = email;
+        preuser.name = firstName + lastName;
+
+        // Save the updated user
+        await preuser.save();
+
+        // Respond with updated user data
+        res.status(200).json({ message: "User profile updated successfully", user: preuser });
+    } catch (error) {
+        if (error.code === 11000 && error.keyPattern.email === 1) {
+            // Duplicate email error
+            return res.status(400).json({ error: "Email address already in use" });
+        } else {
+            console.error("Error updating user profile:", error);
+            res.status(500).json({ error: "Failed to update user profile" });
+        }
+    }
+} */
+exports.updateProfile = async (req, res) => {
+    const { firstName, lastName, email, address, userId } = req.body;
+
+    try {
+        // Find the user by ID
+        const preuser = await user.findOne({ _id: userId });
+
+        // Check if user exists
+        if (!preuser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if the new email already exists for a different user
+        const existingUser = await user.findOne({ email, _id: { $ne: userId } });
+        if (existingUser) {
+            return res.status(400).json({ error: "Email address already in use" });
+        }
+
+        // Update user information
+        preuser.firstName = firstName;
+        preuser.lastName = lastName;
+        preuser.address = address;
+        preuser.email = email;
+        preuser.name = firstName + lastName;
+
+        // Save the updated user
+        await preuser.save();
+
+        // Respond with updated user data
+        res.status(200).json({ message: "User profile updated successfully", user: preuser });
+    } catch (error) {
+        if (error.code === 11000 && error.keyPattern.email === 1) {
+            // Duplicate email error
+            return res.status(400).json({ error: "Email address already in use" });
+        } else {
+            console.error("Error updating user profile:", error);
+            res.status(500).json({ error: "Failed to update user profile" });
+        }
+    }
+}
+const successResponse = (res, message, data, statusCode) => {
+    return res.status(statusCode).json({ success: true, message, data });
+};
+exports.getUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id; // Assuming your route has a parameter for the user ID
+        const userData = await user.findOne({ _id: userId });
+
+        if (!userData) {
+            return errorResponse(
+                res,
+                "User not found. Please ensure you are using the right credentials",
+                [],
+                404
+            );
+        }
+
+        // If the user is found, send the user data in the response
+        return successResponse(
+            res,
+            "User found successfully",
+            userData,
+            200
+        );
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/* exports.updateProfile = async (req, res) => {
+    const { firstName, lastName, email, address, userId } = req.body;
+
+    try {
+        // Find the user by email
+        const preuser = await user.findOne({ _id: userId });
+
+        // Check if user exists
+        if (!preuser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Update user information
+        preuser.firstName = firstName;
+        preuser.lastName = lastName;
+        preuser.address = address;
+        preuser.email = email;
+        preuser.name = firstName + lastName;
+        // Save the updated user
+        await preuser.save();
+
+        // Respond with updated user data
+        res.status(200).json({ message: "User profile updated successfully", user: preuser });
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        res.status(500).json({ error: "Failed to update user profile" });
+    }
+}; */
