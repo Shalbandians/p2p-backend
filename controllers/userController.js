@@ -242,7 +242,7 @@ exports.userLogin = async (req, res) => {
         } else {
 
             const token = await userData.generateAuthtoken();
-            return res.status(200).json({ message: "User login successful", userToken: token, userId: userData._id });
+            return res.status(200).json({ message: "User login successful", userToken: token, userId: userData._id, });
         }
 
 
